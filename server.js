@@ -3,6 +3,7 @@ import cors from "cors";
 import db from "./config/db.js";
 
  import enquiryRoutes from "./routes/enquiryRoutes.js";
+import leadRoutes from "./routes/leadRoutes.js"
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/enquiry", enquiryRoutes);
+app.use("/api/leads", leadRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");
