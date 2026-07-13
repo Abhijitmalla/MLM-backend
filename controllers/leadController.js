@@ -92,3 +92,75 @@ export const getAllLeads = (req, res) => {
         });
     });
 };
+
+export const updateLeadStatus = (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+        return res.status(400).json({
+            success: false,
+            message: "Status is required"
+        });
+    }
+
+    const updateQuery = "UPDATE leads SET status = ? WHERE id = ?";
+
+    db.query(updateQuery, [status, id], (err, results) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: err.message
+            });
+        }
+        
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Lead not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Lead status updated successfully"
+        });
+    });
+};
+
+export const updateLeadAmount = (req, res) => {
+    const { id } = req.params;
+    const { amount } = req.body;
+
+    // Check if amount is provided (can be 0 or empty, so careful with just !amount)
+    if (amount === undefined || amount === null) {
+        return res.status(400).json({
+            success: false,
+            message: "Amount is required"
+        });
+    }
+
+    const updateQuery = "UPDATE leads SET amount = ? WHERE id = ?";
+
+    db.query(updateQuery, [amount, id], (err, results) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: err.message
+            });
+        }
+        
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Lead not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Lead amount updated successfully"
+        });
+    });
+};
+
