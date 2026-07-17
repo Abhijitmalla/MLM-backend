@@ -1,11 +1,12 @@
 import express from "express";
 import { convertToLead, getAllLeads, updateLeadStatus, updateLeadAmount } from "../controllers/leadController.js";
+import { authenticateAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/convert/:id", convertToLead);
-router.get("/all", getAllLeads);
-router.put("/status/:id", updateLeadStatus);
-router.put("/amount/:id", updateLeadAmount);
+router.post("/convert/:id", authenticateAdmin, convertToLead);
+router.get("/all", authenticateAdmin, getAllLeads);
+router.put("/status/:id", authenticateAdmin, updateLeadStatus);
+router.put("/amount/:id", authenticateAdmin, updateLeadAmount);
 
 export default router;
