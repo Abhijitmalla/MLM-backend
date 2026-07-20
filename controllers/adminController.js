@@ -68,3 +68,72 @@ console.log("Match:", match);
         }
     );
 };
+
+export const changePassword = (req, res) => {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    const adminId = req.admin.id;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        return res.status(400).json({
+            success: false,
+            message: "All fields are required"
+        });
+    }
+
+    if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+            success: false,
+            message: "New password and confirm password do not match"
+        });
+    }
+
+    db.query(
+        "SELECT * FROM admins WHERE id=?",
+        [adminId],
+        async (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: err.message
+                });
+            }
+
+            if (result.length === 0) {
+                return res.json({
+                    success: false,
+                    message: "Admin not found"
+                });
+            }
+
+            const admin = result[0];
+            const match = await bcrypt.compare(oldPassword, admin.password);
+
+            if (!match) {
+                return res.json({
+                    success: false,
+                    message: "Incorrect old password"
+                });
+            }
+
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+            db.query(
+                "UPDATE admins SET password=? WHERE id=?",
+                [hashedNewPassword, adminId],
+                (updateErr, updateResult) => {
+                    if (updateErr) {
+                        return res.status(500).json({
+                            success: false,
+                            message: updateErr.message
+                        });
+                    }
+
+                    res.json({
+                        success: true,
+                        message: "Password changed successfully"
+                    });
+                }
+            );
+        }
+    );
+};

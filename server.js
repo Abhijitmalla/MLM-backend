@@ -9,7 +9,20 @@ import leadRoutes from "./routes/leadRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js"
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://127.0.0.1:5501",
+      "http://localhost:5501",
+      "http://localhost:5000",
+      "http://127.0.0.1:5000",
+      "https://vkservicesenterprise.in",
+      "https://www.vkservicesenterprise.in",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

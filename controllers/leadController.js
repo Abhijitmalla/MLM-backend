@@ -35,8 +35,8 @@ if (enquiry.status !== "Contacted") {
 // Insert into leads table
 const insertQuery = `
     INSERT INTO leads
-    (service_name, name, mobile, email)
-    VALUES (?, ?, ?, ?)
+    (service_name, name, mobile, email, source)
+    VALUES (?, ?, ?, ?, ?)
 `;
 
 
@@ -46,7 +46,8 @@ const insertQuery = `
                     enquiry.service_name,
                     enquiry.name,
                     enquiry.mobile,
-                    enquiry.email
+                    enquiry.email,
+                    req.body.source || enquiry.source || null
                 ],
                 (insertErr) => {
 
@@ -202,8 +203,8 @@ export const deleteLead = (req, res) => {
 
             const archiveQuery = `
                 INSERT INTO leads_archive
-                (service_name, name, mobile, email, status, amount)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (service_name, name, mobile, email, source, status, amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
 
             db.query(
@@ -213,6 +214,7 @@ export const deleteLead = (req, res) => {
                     lead.name,
                     lead.mobile,
                     lead.email,
+                    lead.source,
                     lead.status,
                     lead.amount
                 ],

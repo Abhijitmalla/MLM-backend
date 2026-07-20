@@ -1,7 +1,7 @@
 import db from "../config/db.js";
 
 export const createEnquiry = (req, res) => {
-    const { service_name, name, mobile, email } = req.body;
+    const { service_name, name, mobile, email, source } = req.body;
 
     if (!service_name || !name || !mobile || !email) {
         return res.status(400).json({
@@ -10,24 +10,46 @@ export const createEnquiry = (req, res) => {
         });
     }
 
-    const sql = `
-        INSERT INTO service_enquiries
-        (service_name, name, mobile, email)
-        VALUES (?, ?, ?, ?)
+    const checkSql = `
+        SELECT id FROM service_enquiries
+        WHERE name = ? AND mobile = ? AND email = ? AND service_name = ?
     `;
 
-    db.query(sql, [service_name, name, mobile, email], (err, result) => {
-        if (err) {
+    db.query(checkSql, [name, mobile, email, service_name], (checkErr, checkResult) => {
+        if (checkErr) {
             return res.status(500).json({
                 success: false,
                 message: "Database Error",
-                error: err.message
+                error: checkErr.message
             });
         }
 
-        res.status(201).json({
-            success: true,
-            message: "Enquiry submitted successfully."
+        if (checkResult.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: "An enquiry with this name, mobile, and email already exists for this service."
+            });
+        }
+
+        const sql = `
+            INSERT INTO service_enquiries
+            (service_name, name, mobile, email, source)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        db.query(sql, [service_name, name, mobile, email, source || null], (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Database Error",
+                    error: err.message
+                });
+            }
+
+            res.status(201).json({
+                success: true,
+                message: "Enquiry submitted successfully."
+            });
         });
     });
 };
@@ -86,9 +108,9 @@ export const getEnquiryStats = (req, res) => {
     const sql = `
         SELECT
             COUNT(*) AS total,
-            SUM(status='New') AS pending,
-            SUM(status='Contacted') AS contacted,
-            SUM(DATE(created_at)=CURDATE()) AS today
+            COALESCE(SUM(status='New'), 0) AS pending,
+            COALESCE(SUM(status='Contacted'), 0) AS contacted,
+            COALESCE(SUM(DATE(created_at)=CURDATE()), 0) AS today
         FROM service_enquiries
     `;
 
@@ -135,13 +157,14 @@ export const deleteEnquiry = (req, res) => {
             // Insert into archive table
             db.query(
                 `INSERT INTO archive_enquiry
-                (service_name, name, mobile, email, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)`,
+                (service_name, name, mobile, email, source, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 [
                     enquiry.service_name,
                     enquiry.name,
                     enquiry.mobile,
                     enquiry.email,
+                    enquiry.source,
                     enquiry.status,
                     enquiry.created_at
                 ],
